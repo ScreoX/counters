@@ -35,7 +35,9 @@ int main(int argc, char* argv[]) {
     }
 
     for (std::thread& thread : threads) {
-        thread.join();
+        if (thread.joinable()) {
+            thread.join();
+        }
     }
 
     for (const auto& [filename, count] : discontinuityCounts) {

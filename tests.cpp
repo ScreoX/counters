@@ -23,7 +23,9 @@ void runTest(const std::string& directoryPath, std::vector<int>& expectedDiscont
     }
 
     for (std::thread& thread : threads) {
-        thread.join();
+        if (thread.joinable()) {
+            thread.join();
+        }
     }
 
     std::vector<int> result;
@@ -37,13 +39,13 @@ void runTest(const std::string& directoryPath, std::vector<int>& expectedDiscont
 }
 
 TEST(CounterProcessorTests, TestScenario1) {
-    std::string directoryPath = "D:/InternShip/Tasks/counters/cmake-build-debug/data_raw_32_rand_ch_offs";
+    std::string directoryPath = "D:/InternShip/Tasks/counter/cmake-build-debug/data_ok";
     std::vector<int> expectedDiscontinuityCounts(8, 0);
     runTest(directoryPath, expectedDiscontinuityCounts);
 }
 
 TEST(CounterProcessorTests, TestScenario2) {
-    std::string testFilePath = "D:/InternShip/Tasks/counters/cmake-build-debug/data_raw_32_rand_ch_offs_break";
+    std::string testFilePath = "D:/InternShip/Tasks/counter/cmake-build-debug/data_fail";
     std::vector<int> expectedDiscontinuityCounts(8, 128);
     runTest(testFilePath, expectedDiscontinuityCounts);
 }

@@ -4,6 +4,11 @@
 #include <vector>
 #include <mutex>
 
+struct CounterInfo {
+    bool isFirstValue;
+    uint32_t data;
+};
+
 std::mutex cout_mutex;
 
 void process_file(const std::string& filepath, std::map<std::string, int>& discontinuityCounts) {
@@ -17,25 +22,25 @@ void process_file(const std::string& filepath, std::map<std::string, int>& disco
         return;
     }
 
-    std::vector<uint32_t> counters(countOfChannels);
-    std::vector<bool> checkFirstValue(countOfChannels, true);
+    std::vector<CounterInfo> counters(countOfChannels);
+
+    for (auto& counter : counters) {
+        counter.isFirstValue = true;
+    }
+
     int discontinuity_count = 0;
 
     uint32_t counter;
     int index = 0;
 
     while (file.read(reinterpret_cast<char*>(&counter), sizeof(counter))) {
-        int channel = index % countOfChannels;
+        const int channel = index % countOfChannels;
 
-        if (checkFirstValue[channel]) {
-            counters[channel] = counter;
-            checkFirstValue[channel] = false;
+        if (counters[channel].isFirstValue) {
+            counters[channel].data = counter;
+            counters[channel].isFirstValue = false;
         } else {
-            uint32_t expected = counters[channel] + 1;
-
-            if (counters[channel] == 0xFFFFFFFF) {
-                expected = 0;
-            }
+            uint32_t expected = counters[channel].data + 1;
 
             if (counter != expected) {
                 std::lock_guard<std::mutex> lock(cout_mutex);
@@ -44,7 +49,7 @@ void process_file(const std::string& filepath, std::map<std::string, int>& disco
                           << ", Real value: " << counter << '\n';
                 discontinuity_count++;
             }
-            counters[channel] = counter;
+            counters[channel].data = counter;
         }
         index++;
     }
